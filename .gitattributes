@@ -1,2 +1,9 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+# Auto detect text files and perform LF normalization
+* text=auto
+# Add logs to track changes
+* log = /path/to/log/file.log# Auto detect text files and perform LF normalization
+* text=auto
+# Add logs to track changes
+* log = /path/to/log/file.log
