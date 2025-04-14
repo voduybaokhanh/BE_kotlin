@@ -16,29 +16,26 @@ exports.getAllOrders = async (req, res) => {
 // Lấy đơn hàng theo ID
 exports.getOrderById = async (req, res) => {
   try {
-    const order = await Order.findOne({ OrderID: req.params.id });
+    const order = await Order.findOne({ OrderID: req.params.id })
+      .populate('Email', 'FullName')
+      .populate('Address')
+      .populate('PaymentMethod', 'MethodName');
 
     if (!order) {
       return res.status(404).json({ msg: "Order not found" });
     }
 
-    // Lấy các mục trong đơn hàng
-    const orderItems = await OrderItem.find({ OrderID: req.params.id });
-
-    // Lấy thông tin chi tiết sản phẩm cho mỗi mục
-    const itemsWithDetails = await Promise.all(
-      orderItems.map(async (item) => {
-        const product = await Product.findOne({ ProductID: item.ProductID });
-        return {
-          ...item.toObject(),
-          product: product
-        };
-      })
-    );
+    // Lấy các mục trong đơn hàng với thông tin sản phẩm
+    const orderItems = await OrderItem.find({ OrderID: req.params.id })
+      .populate({
+        path: 'ProductID',
+        model: 'Product',
+        select: 'ProductName Price Image Description'
+      });
 
     res.json({
       order,
-      items: itemsWithDetails
+      items: orderItems
     });
   } catch (err) {
     console.error(err.message);
@@ -49,7 +46,9 @@ exports.getOrderById = async (req, res) => {
 // Lấy đơn hàng theo Email
 exports.getOrdersByEmail = async (req, res) => {
   try {
-    const orders = await Order.find({ Email: req.params.email });
+    const orders = await Order.find({ Email: req.params.email })
+      .populate('Address')
+      .populate('PaymentMethod', 'MethodName');
     res.json(orders);
   } catch (err) {
     console.error(err.message);

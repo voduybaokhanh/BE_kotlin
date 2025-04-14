@@ -1,9 +1,18 @@
 const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
 
 // OrderItem Schema
-const OrderItemSchema = new mongoose.Schema({
-  OrderID: { type: String, ref: "Order", required: true }, // PK, FK1
-  ProductID: { type: String, ref: "Product", required: true }, // PK, FK2
+const OrderItemSchema = new Schema({
+  OrderID: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Order",
+    required: true,
+  }, // PK, FK1
+  ProductID: {
+    type: String,
+    ref: "Product",
+    required: true,
+  }, // PK, FK2
   Quantity: { type: Number, required: true },
   Price: { type: Number, required: true }, // You might want to store the price at the time of order
 });

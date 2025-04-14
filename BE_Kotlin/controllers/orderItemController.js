@@ -16,20 +16,14 @@ exports.getAllOrderItems = async (req, res) => {
 // Lấy các mục trong đơn hàng theo OrderID
 exports.getOrderItemsByOrderId = async (req, res) => {
   try {
-    const orderItems = await OrderItem.find({ OrderID: req.params.orderId });
+    const orderItems = await OrderItem.find({ OrderID: req.params.orderId })
+      .populate({
+        path: 'ProductID',
+        model: 'Product',
+        select: 'ProductName Price Image Description'
+      });
 
-    // Lấy thông tin chi tiết sản phẩm cho mỗi mục
-    const itemsWithDetails = await Promise.all(
-      orderItems.map(async (item) => {
-        const product = await Product.findOne({ ProductID: item.ProductID });
-        return {
-          ...item.toObject(),
-          product: product,
-        };
-      })
-    );
-
-    res.json(itemsWithDetails);
+    res.json(orderItems);
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Server Error");
@@ -42,19 +36,17 @@ exports.getOrderItemByIds = async (req, res) => {
     const orderItem = await OrderItem.findOne({
       OrderID: req.params.orderId,
       ProductID: req.params.productId,
+    }).populate({
+      path: 'ProductID',
+      model: 'Product',
+      select: 'ProductName Price Image Description'
     });
 
     if (!orderItem) {
       return res.status(404).json({ msg: "Order item not found" });
     }
 
-    // Lấy thông tin chi tiết sản phẩm
-    const product = await Product.findOne({ ProductID: orderItem.ProductID });
-
-    res.json({
-      ...orderItem.toObject(),
-      product: product,
-    });
+    res.json(orderItem);
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Server Error");

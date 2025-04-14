@@ -1,23 +1,24 @@
 const express = require('express');
 const router = express.Router();
 const accountController = require('../controllers/accountController');
+const { protect, authorize } = require('../middleware/auth');
+const { accountValidationRules, handleValidationErrors } = require('../middleware/validator');
 
-/* GET accounts listing. */
-router.get('/', accountController.getAllAccounts);
-
-/* GET account by email */
-router.get('/:email', accountController.getAccountByEmail);
-
-/* POST create new account */
-router.post('/', accountController.createAccount);
-
-/* POST login */
+// Public routes
+router.post('/register', accountValidationRules(), handleValidationErrors, accountController.register);
 router.post('/login', accountController.login);
 
-/* PUT update account */
-router.put('/:email', accountController.updateAccount);
+// Protected routes - require authentication
+router.get('/me', protect, accountController.getMe);
+router.put('/change-password', protect, accountController.changePassword);
 
-/* DELETE account */
-router.delete('/:email', accountController.deleteAccount);
+// Admin only routes
+router.get('/', protect, authorize('admin'), accountController.getAllAccounts);
+
+// Routes that need authentication and specific permissions
+router.route('/:email')
+  .get(protect, accountController.getAccountByEmail)
+  .put(protect, accountController.updateAccount)
+  .delete(protect, authorize('admin'), accountController.deleteAccount);
 
 module.exports = router;

@@ -3,7 +3,8 @@ const Product = require("../models/Product");
 // Lấy tất cả products
 exports.getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find();
+    const products = await Product.find()
+      .populate('CateID', 'CateName');
     res.json(products);
   } catch (err) {
     console.error(err.message);
@@ -14,7 +15,8 @@ exports.getAllProducts = async (req, res) => {
 // Lấy product theo ID
 exports.getProductById = async (req, res) => {
   try {
-    const product = await Product.findOne({ ProductID: req.params.id });
+    const product = await Product.findOne({ ProductID: req.params.id })
+      .populate('CateID', 'CateName');
 
     if (!product) {
       return res.status(404).json({ msg: "Product not found" });
@@ -30,7 +32,8 @@ exports.getProductById = async (req, res) => {
 // Lấy products theo category
 exports.getProductsByCategory = async (req, res) => {
   try {
-    const products = await Product.find({ CateID: req.params.cateId });
+    const products = await Product.find({ CateID: req.params.cateId })
+      .populate('CateID', 'CateName');
     res.json(products);
   } catch (err) {
     console.error(err.message);

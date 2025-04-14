@@ -1,9 +1,18 @@
 const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
 
 // Product Schema
-const ProductSchema = new mongoose.Schema({
-  ProductID: { type: String, required: true, unique: true },
-  CateID: { type: String, ref: "Category", required: true }, // FK
+const ProductSchema = new Schema({
+  ProductID: { 
+    type: String, 
+    required: true, 
+    unique: true 
+  },
+  CateID: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: "Category", 
+    required: true 
+  }, // FK
   ProductName: { type: String, required: true },
   Description: { type: String },
   Price: { type: Number, required: true },

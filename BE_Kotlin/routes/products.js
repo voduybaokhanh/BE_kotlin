@@ -1,23 +1,23 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const productController = require('../controllers/productController');
+const productController = require("../controllers/productController");
 
 /* GET products listing. */
-router.get('/', productController.getAllProducts);
-
-/* GET product by ID */
-router.get('/:id', productController.getProductById);
+router.get("/", productController.getAllProducts);
 
 /* GET products by category */
-router.get('/category/:cateId', productController.getProductsByCategory);
+router.get("/category/:cateId", productController.getProductsByCategory);
+
+/* GET product by ID */
+router.get("/:id", productController.getProductById);
 
 /* POST create new product */
-router.post('/', productController.createProduct);
+router.post("/", productController.createProduct);
 
 /* PUT update product */
-router.put('/:id', productController.updateProduct);
+router.put("/:id", productController.updateProduct);
 
 /* DELETE product */
-router.delete('/:id', productController.deleteProduct);
+router.delete("/:id", productController.deleteProduct);
 
 module.exports = router;
