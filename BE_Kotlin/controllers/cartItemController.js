@@ -1,0 +1,163 @@
+const CartItem = require("../models/CartItem");
+const Product = require("../models/Product");
+const Cart = require("../models/Cart");
+
+// Lấy tất cả các mục trong giỏ hàng
+exports.getAllCartItems = async (req, res) => {
+  try {
+    const cartItems = await CartItem.find();
+    res.json(cartItems);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server Error");
+  }
+};
+
+// Lấy các mục trong giỏ hàng theo CartID
+exports.getCartItemsByCartId = async (req, res) => {
+  try {
+    const cartItems = await CartItem.find({ CartID: req.params.cartId });
+    
+    // Lấy thông tin chi tiết sản phẩm cho mỗi mục
+    const itemsWithDetails = await Promise.all(
+      cartItems.map(async (item) => {
+        const product = await Product.findOne({ ProductID: item.ProductID });
+        return {
+          ...item.toObject(),
+          product: product
+        };
+      })
+    );
+    
+    res.json(itemsWithDetails);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server Error");
+  }
+};
+
+// Lấy mục trong giỏ hàng theo CartID và ProductID
+exports.getCartItemByIds = async (req, res) => {
+  try {
+    const cartItem = await CartItem.findOne({ 
+      CartID: req.params.cartId, 
+      ProductID: req.params.productId 
+    });
+
+    if (!cartItem) {
+      return res.status(404).json({ msg: "Cart item not found" });
+    }
+
+    // Lấy thông tin chi tiết sản phẩm
+    const product = await Product.findOne({ ProductID: cartItem.ProductID });
+    
+    res.json({
+      ...cartItem.toObject(),
+      product: product
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server Error");
+  }
+};
+
+// Thêm mục vào giỏ hàng
+exports.createCartItem = async (req, res) => {
+  const { CartID, ProductID, Quantity } = req.body;
+
+  try {
+    // Kiểm tra xem giỏ hàng có tồn tại không
+    const cart = await Cart.findOne({ CartID });
+    if (!cart) {
+      return res.status(404).json({ msg: "Cart not found" });
+    }
+
+    // Kiểm tra xem sản phẩm có tồn tại không
+    const product = await Product.findOne({ ProductID });
+    if (!product) {
+      return res.status(404).json({ msg: "Product not found" });
+    }
+
+    // Kiểm tra xem mục đã tồn tại trong giỏ hàng chưa
+    let cartItem = await CartItem.findOne({ CartID, ProductID });
+
+    if (cartItem) {
+      return res.status(400).json({ msg: "Item already exists in cart. Use PUT to update quantity." });
+    }
+
+    // Tạo mục mới
+    cartItem = new CartItem({
+      CartID,
+      ProductID,
+      Quantity: Quantity || 1
+    });
+
+    await cartItem.save();
+    
+    res.json({
+      ...cartItem.toObject(),
+      product: product
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server Error");
+  }
+};
+
+// Cập nhật số lượng mục trong giỏ hàng
+exports.updateCartItem = async (req, res) => {
+  const { Quantity } = req.body;
+
+  try {
+    let cartItem = await CartItem.findOne({ 
+      CartID: req.params.cartId, 
+      ProductID: req.params.productId 
+    });
+
+    if (!cartItem) {
+      return res.status(404).json({ msg: "Cart item not found" });
+    }
+
+    // Cập nhật số lượng
+    if (Quantity !== undefined) {
+      if (Quantity <= 0) {
+        // Nếu số lượng <= 0, xóa sản phẩm khỏi giỏ hàng
+        await CartItem.deleteOne({ CartID: req.params.cartId, ProductID: req.params.productId });
+        return res.json({ msg: "Item removed from cart" });
+      }
+      cartItem.Quantity = Quantity;
+    }
+
+    await cartItem.save();
+    
+    // Lấy thông tin chi tiết sản phẩm
+    const product = await Product.findOne({ ProductID: cartItem.ProductID });
+    
+    res.json({
+      ...cartItem.toObject(),
+      product: product
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server Error");
+  }
+};
+
+// Xóa mục khỏi giỏ hàng
+exports.deleteCartItem = async (req, res) => {
+  try {
+    const cartItem = await CartItem.findOneAndDelete({ 
+      CartID: req.params.cartId, 
+      ProductID: req.params.productId 
+    });
+
+    if (!cartItem) {
+      return res.status(404).json({ msg: "Cart item not found" });
+    }
+
+    res.json({ msg: "Item removed from cart" });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server Error");
+  }
+};
