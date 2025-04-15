@@ -87,11 +87,9 @@ exports.createCartItem = async (req, res) => {
     let cartItem = await CartItem.findOne({ CartID, ProductID });
 
     if (cartItem) {
-      return res
-        .status(400)
-        .json({
-          msg: "Item already exists in cart. Use PUT to update quantity.",
-        });
+      return res.status(400).json({
+        msg: "Item already exists in cart. Use PUT to update quantity.",
+      });
     }
 
     // Tạo mục mới
@@ -114,17 +112,31 @@ exports.createCartItem = async (req, res) => {
 };
 
 /**
- * @api {put} /api/cart-items/:cartId/:productId Cập nhật số lượng mục trong giỏ hàng
+ * @api {put} /api/cart-items/:id Cập nhật số lượng mục trong giỏ hàng
  * @apiName UpdateCartItem
+ * @apiDescription Cập nhật số lượng sản phẩm trong giỏ hàng bằng ID của cart item
  */
 exports.updateCartItem = async (req, res) => {
   const { Quantity } = req.body;
+  const id = req.params.id;
 
   try {
-    let cartItem = await CartItem.findOne({
-      CartID: req.params.cartId,
-      ProductID: req.params.productId,
-    });
+    let cartItem;
+
+    // Check if the ID is a valid MongoDB ObjectId
+    if (id.match(/^[0-9a-fA-F]{24}$/)) {
+      // If it's a valid ObjectId, find by _id
+      cartItem = await CartItem.findById(id);
+    } else {
+      // If not a valid ObjectId, it might be a CartID/ProductID combination
+      const [cartId, productId] = id.split("_");
+      if (cartId && productId) {
+        cartItem = await CartItem.findOne({
+          CartID: cartId,
+          ProductID: productId,
+        });
+      }
+    }
 
     if (!cartItem) {
       return res.status(404).json({ msg: "Cart item not found" });
@@ -134,10 +146,17 @@ exports.updateCartItem = async (req, res) => {
     if (Quantity !== undefined) {
       if (Quantity <= 0) {
         // Nếu số lượng <= 0, xóa sản phẩm khỏi giỏ hàng
-        await CartItem.deleteOne({
-          CartID: req.params.cartId,
-          ProductID: req.params.productId,
-        });
+        if (id.match(/^[0-9a-fA-F]{24}$/)) {
+          await CartItem.findByIdAndDelete(id);
+        } else {
+          const [cartId, productId] = id.split("_");
+          if (cartId && productId) {
+            await CartItem.deleteOne({
+              CartID: cartId,
+              ProductID: productId,
+            });
+          }
+        }
         return res.json({ msg: "Item removed from cart" });
       }
       cartItem.Quantity = Quantity;
@@ -159,15 +178,29 @@ exports.updateCartItem = async (req, res) => {
 };
 
 /**
- * @api {delete} /api/cart-items/:cartId/:productId Xóa mục khỏi giỏ hàng
+ * @api {delete} /api/cart-items/:id Xóa mục khỏi giỏ hàng theo ID
  * @apiName DeleteCartItem
+ * @apiDescription Xóa sản phẩm khỏi giỏ hàng bằng ID của cart item
  */
 exports.deleteCartItem = async (req, res) => {
   try {
-    const cartItem = await CartItem.findOneAndDelete({
-      CartID: req.params.cartId,
-      ProductID: req.params.productId,
-    });
+    let cartItem;
+    const id = req.params.id;
+
+    // Check if the ID is a valid MongoDB ObjectId
+    if (id.match(/^[0-9a-fA-F]{24}$/)) {
+      // If it's a valid ObjectId, try to delete by _id
+      cartItem = await CartItem.findByIdAndDelete(id);
+    } else {
+      // If not a valid ObjectId, it might be a CartID/ProductID combination
+      const [cartId, productId] = id.split("_");
+      if (cartId && productId) {
+        cartItem = await CartItem.findOneAndDelete({
+          CartID: cartId,
+          ProductID: productId,
+        });
+      }
+    }
 
     if (!cartItem) {
       return res.status(404).json({ msg: "Cart item not found" });
@@ -179,3 +212,6 @@ exports.deleteCartItem = async (req, res) => {
     res.status(500).send("Server Error");
   }
 };
+
+// Keep this as an alias for backward compatibility
+exports.deleteCartItemById = exports.deleteCartItem;

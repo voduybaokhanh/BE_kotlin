@@ -64,6 +64,8 @@ app.use(cookieParser());
 
 // Static files
 app.use(express.static(path.join(__dirname, "public")));
+// Serve uploaded files
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // JWT authentication middleware - exclude paths that don't need auth
 const jwtMiddleware = jwt({

@@ -38,19 +38,28 @@ exports.getCategoryById = async (req, res) => {
  * @apiName CreateCategory
  */
 exports.createCategory = async (req, res) => {
-  const { CateName } = req.body;
+  const { CateName, CateID } = req.body;
 
   try {
-    // Tạo category mới
-    const category = new Category({
+    // Create a new category object
+    const categoryData = {
       CateName,
-    });
+    };
+
+    // Only add CateID to the object if it's explicitly provided
+    if (CateID !== undefined && CateID !== null) {
+      categoryData.CateID = CateID;
+    }
+    // If CateID is not provided, the default function in the schema will generate one
+
+    // Tạo category mới
+    const category = new Category(categoryData);
 
     await category.save();
     res.json(category);
   } catch (err) {
     console.error(err.message);
-    res.status(500).send("Server Error");
+    res.status(500).json({ error: err.message }); // Return more detailed error message
   }
 };
 
@@ -62,7 +71,8 @@ exports.updateCategory = async (req, res) => {
   const { CateName } = req.body;
 
   try {
-    let category = await Category.findOne({ CateID: req.params.id });
+    // Find by MongoDB _id instead of CateID
+    let category = await Category.findById(req.params.id);
 
     if (!category) {
       return res.status(404).json({ msg: "Category not found" });
@@ -75,7 +85,7 @@ exports.updateCategory = async (req, res) => {
     res.json(category);
   } catch (err) {
     console.error(err.message);
-    res.status(500).send("Server Error");
+    res.status(500).json({ error: err.message }); // Return more detailed error message
   }
 };
 
@@ -85,7 +95,8 @@ exports.updateCategory = async (req, res) => {
  */
 exports.deleteCategory = async (req, res) => {
   try {
-    const category = await Category.findOneAndDelete({ CateID: req.params.id });
+    // Find by MongoDB _id instead of CateID
+    const category = await Category.findByIdAndDelete(req.params.id);
 
     if (!category) {
       return res.status(404).json({ msg: "Category not found" });
@@ -94,6 +105,6 @@ exports.deleteCategory = async (req, res) => {
     res.json({ msg: "Category removed" });
   } catch (err) {
     console.error(err.message);
-    res.status(500).send("Server Error");
+    res.status(500).json({ error: err.message }); // Return more detailed error message
   }
 };

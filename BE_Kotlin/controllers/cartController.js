@@ -59,13 +59,49 @@ exports.getCartByEmail = async (req, res) => {
  * @apiName CreateCart
  */
 exports.createCart = async (req, res) => {
-  const { Email } = req.body;
-
   try {
-    // Tạo giỏ hàng mới
-    const cart = new Cart({
+    // First, check if there are any existing carts with null CartID
+    // and update them to prevent duplicate key errors
+    try {
+      const cartsWithNullCartID = await Cart.find({ CartID: null });
+      if (cartsWithNullCartID.length > 0) {
+        console.log(
+          `Found ${cartsWithNullCartID.length} carts with null CartID. Updating them...`
+        );
+
+        for (const cart of cartsWithNullCartID) {
+          const newCartID =
+            "CART_" +
+            Date.now().toString() +
+            Math.floor(Math.random() * 1000).toString();
+          cart.CartID = newCartID;
+          await cart.save();
+          console.log(`Updated cart ${cart._id} with new CartID: ${newCartID}`);
+
+          // Add a small delay to ensure unique timestamps
+          await new Promise((resolve) => setTimeout(resolve, 10));
+        }
+      }
+    } catch (fixErr) {
+      console.error("Error fixing existing carts:", fixErr);
+      // Continue with creating the new cart even if fixing fails
+    }
+
+    const { Email, CartID } = req.body;
+
+    // Create cart data object
+    const cartData = {
       Email,
-    });
+    };
+
+    // Only add CartID if it's explicitly provided
+    if (CartID !== undefined && CartID !== null) {
+      cartData.CartID = CartID;
+    }
+    // If CartID is not provided, the default function in the schema will generate one
+
+    // Tạo giỏ hàng mới
+    const cart = new Cart(cartData);
 
     await cart.save();
     res.json(cart);
@@ -81,14 +117,22 @@ exports.createCart = async (req, res) => {
  */
 exports.deleteCart = async (req, res) => {
   try {
-    const cart = await Cart.findByIdAndDelete(req.params.id);
+    // First find the cart to get its CartID
+    const cart = await Cart.findById(req.params.id);
 
     if (!cart) {
       return res.status(404).json({ msg: "Cart not found" });
     }
 
-    // Xóa tất cả các mục trong giỏ hàng
-    await CartItem.deleteMany(req.params.id);
+    const cartID = cart.CartID;
+
+    // Delete the cart
+    await Cart.findByIdAndDelete(req.params.id);
+
+    // Delete all cart items with the matching CartID
+    if (cartID) {
+      await CartItem.deleteMany({ CartID: cartID });
+    }
 
     res.json({ msg: "Cart and all items removed" });
   } catch (err) {

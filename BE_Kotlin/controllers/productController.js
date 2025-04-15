@@ -58,31 +58,102 @@ exports.getProductsByCategory = async (req, res) => {
  * @apiName CreateProduct
  */
 exports.createProduct = async (req, res) => {
-  const { CateID, ProductName, Description, Price } = req.body;
-  let Image;
-
-  if (req.file) {
-    // req.file contains information about the uploaded file
-    Image = req.file.path; // Or req.file.filename depending on your storage config
-  } else {
-    Image = null; // Or a default image URL if you have one
-  }
-
   try {
-    // Tạo product mới
-    const product = new Product({
+    console.log("Request body:", req.body);
+    console.log("Request files:", req.files);
+
+    // First, check if there are any existing products with null ID or ProductID
+    // and update them to prevent duplicate key errors
+    try {
+      // Fix products with null ID
+      const productsWithNullID = await Product.find({ ID: null });
+      if (productsWithNullID.length > 0) {
+        console.log(
+          `Found ${productsWithNullID.length} products with null ID. Updating them...`
+        );
+
+        for (const product of productsWithNullID) {
+          const newID =
+            "ID_" +
+            Date.now().toString() +
+            Math.floor(Math.random() * 1000).toString();
+          product.ID = newID;
+          await product.save();
+          console.log(`Updated product ${product._id} with new ID: ${newID}`);
+
+          // Add a small delay to ensure unique timestamps
+          await new Promise((resolve) => setTimeout(resolve, 10));
+        }
+      }
+
+      // Fix products with null ProductID
+      const productsWithNullProductID = await Product.find({ ProductID: null });
+      if (productsWithNullProductID.length > 0) {
+        console.log(
+          `Found ${productsWithNullProductID.length} products with null ProductID. Updating them...`
+        );
+
+        for (const product of productsWithNullProductID) {
+          const newProductID =
+            "PROD_" +
+            Date.now().toString() +
+            Math.floor(Math.random() * 1000).toString();
+          product.ProductID = newProductID;
+          await product.save();
+          console.log(
+            `Updated product ${product._id} with new ProductID: ${newProductID}`
+          );
+
+          // Add a small delay to ensure unique timestamps
+          await new Promise((resolve) => setTimeout(resolve, 10));
+        }
+      }
+    } catch (fixErr) {
+      console.error("Error fixing existing products:", fixErr);
+      // Continue with creating the new product even if fixing fails
+    }
+
+    const { CateID, ProductName, Description, Price, ProductID, ID } = req.body;
+    let Image = null;
+
+    // Check if any files were uploaded
+    if (req.files && req.files.length > 0) {
+      // Use the first file found (you can modify this logic if needed)
+      const file = req.files[0];
+      Image = `/api/products/uploads/${file.filename}`;
+      console.log("Image path set to:", Image);
+    } else {
+      console.log("No image file uploaded");
+    }
+
+    // Create product data object
+    const productData = {
       CateID,
       ProductName,
       Description,
       Price,
       Image,
-    });
+    };
+
+    // Only add ID if it's explicitly provided
+    if (ID !== undefined && ID !== null) {
+      productData.ID = ID;
+    }
+
+    // Only add ProductID if it's explicitly provided
+    if (ProductID !== undefined && ProductID !== null) {
+      productData.ProductID = ProductID;
+    }
+    // If ID or ProductID is not provided, the default function in the schema will generate one
+
+    // Tạo product mới
+    const product = new Product(productData);
 
     await product.save();
     res.json(product);
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Server Error");
+    console.error("Error creating product:", err);
+    res.status(500).json({ error: err.message });
   }
 };
 

@@ -5,12 +5,12 @@ const Schema = mongoose.Schema;
 const CartItemSchema = new Schema(
   {
     CartID: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
       ref: "Cart",
       required: true,
     }, // FK1
     ProductID: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
       ref: "Product",
       required: true,
     }, // FK2

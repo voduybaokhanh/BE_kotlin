@@ -1,6 +1,9 @@
 const PaymentMethod = require("../models/PaymentMethod");
 
-// Lấy tất cả phương thức thanh toán
+/**
+ * @api {get} /api/payment-methods Lấy tất cả phương thức thanh toán
+ * @apiName GetAllPaymentMethods
+ */
 exports.getAllPaymentMethods = async (req, res) => {
   try {
     const paymentMethods = await PaymentMethod.find();
@@ -11,10 +14,15 @@ exports.getAllPaymentMethods = async (req, res) => {
   }
 };
 
-// Lấy phương thức thanh toán theo ID
+/**
+ * @api {get} /api/payment-methods/:id Lấy phương thức thanh toán theo ID
+ * @apiName GetPaymentMethodById
+ */
 exports.getPaymentMethodById = async (req, res) => {
   try {
-    const paymentMethod = await PaymentMethod.findOne({ PaymentMethodID: req.params.id });
+    const paymentMethod = await PaymentMethod.findOne({
+      PaymentMethodID: req.params.id,
+    });
 
     if (!paymentMethod) {
       return res.status(404).json({ msg: "Payment method not found" });
@@ -27,7 +35,10 @@ exports.getPaymentMethodById = async (req, res) => {
   }
 };
 
-// Tạo phương thức thanh toán mới
+/**
+ * @api {post} /api/payment-methods Tạo phương thức thanh toán mới
+ * @apiName CreatePaymentMethod
+ */
 exports.createPaymentMethod = async (req, res) => {
   const { PaymentMethodID, MethodName } = req.body;
 
@@ -42,7 +53,7 @@ exports.createPaymentMethod = async (req, res) => {
     // Tạo phương thức thanh toán mới
     paymentMethod = new PaymentMethod({
       PaymentMethodID,
-      MethodName
+      MethodName,
     });
 
     await paymentMethod.save();
@@ -53,12 +64,17 @@ exports.createPaymentMethod = async (req, res) => {
   }
 };
 
-// Cập nhật phương thức thanh toán
+/**
+ * @api {put} /api/payment-methods/:id Cập nhật phương thức thanh toán
+ * @apiName UpdatePaymentMethod
+ */
 exports.updatePaymentMethod = async (req, res) => {
   const { MethodName } = req.body;
 
   try {
-    let paymentMethod = await PaymentMethod.findOne({ PaymentMethodID: req.params.id });
+    let paymentMethod = await PaymentMethod.findOne({
+      PaymentMethodID: req.params.id,
+    });
 
     if (!paymentMethod) {
       return res.status(404).json({ msg: "Payment method not found" });
@@ -75,10 +91,15 @@ exports.updatePaymentMethod = async (req, res) => {
   }
 };
 
-// Xóa phương thức thanh toán
+/**
+ * @api {delete} /api/payment-methods/:id Xóa phương thức thanh toán
+ * @apiName DeletePaymentMethod
+ */
 exports.deletePaymentMethod = async (req, res) => {
   try {
-    const paymentMethod = await PaymentMethod.findOneAndDelete({ PaymentMethodID: req.params.id });
+    const paymentMethod = await PaymentMethod.findOneAndDelete({
+      PaymentMethodID: req.params.id,
+    });
 
     if (!paymentMethod) {
       return res.status(404).json({ msg: "Payment method not found" });
