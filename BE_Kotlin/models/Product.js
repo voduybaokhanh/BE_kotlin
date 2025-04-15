@@ -3,11 +3,6 @@ const Schema = mongoose.Schema;
 
 // Product Schema
 const ProductSchema = new Schema({
-  ProductID: { 
-    type: String, 
-    required: true, 
-    unique: true 
-  },
   CateID: { 
     type: mongoose.Schema.Types.ObjectId, 
     ref: "Category", 
@@ -17,7 +12,7 @@ const ProductSchema = new Schema({
   Description: { type: String },
   Price: { type: Number, required: true },
   Image: { type: String }, // You might want to use a more complex type if needed
-});
+}, { timestamps: true });
 
 // Tạo và xuất model
 module.exports = mongoose.model("Product", ProductSchema);

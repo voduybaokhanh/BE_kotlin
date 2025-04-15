@@ -20,9 +20,10 @@ exports.getAllProducts = async (req, res) => {
  */
 exports.getProductById = async (req, res) => {
   try {
-    const product = await Product.findOne({
-      ProductID: req.params.id,
-    }).populate("CateID", "CateName");
+    const product = await Product.findById(req.params.id).populate(
+      "CateID",
+      "CateName"
+    );
 
     if (!product) {
       return res.status(404).json({ msg: "Product not found" });
@@ -57,20 +58,11 @@ exports.getProductsByCategory = async (req, res) => {
  * @apiName CreateProduct
  */
 exports.createProduct = async (req, res) => {
-  const { ProductID, CateID, ProductName, Description, Price, Image } =
-    req.body;
+  const { CateID, ProductName, Description, Price, Image } = req.body;
 
   try {
-    // Kiểm tra xem product ID đã tồn tại chưa
-    let product = await Product.findOne({ ProductID });
-
-    if (product) {
-      return res.status(400).json({ msg: "Product already exists" });
-    }
-
     // Tạo product mới
-    product = new Product({
-      ProductID,
+    const product = new Product({
       CateID,
       ProductName,
       Description,
@@ -94,7 +86,7 @@ exports.updateProduct = async (req, res) => {
   const { CateID, ProductName, Description, Price, Image } = req.body;
 
   try {
-    let product = await Product.findOne({ ProductID: req.params.id });
+    let product = await Product.findById(req.params.id);
 
     if (!product) {
       return res.status(404).json({ msg: "Product not found" });
@@ -121,9 +113,7 @@ exports.updateProduct = async (req, res) => {
  */
 exports.deleteProduct = async (req, res) => {
   try {
-    const product = await Product.findOneAndDelete({
-      ProductID: req.params.id,
-    });
+    const product = await Product.findByIdAndDelete(req.params.id);
 
     if (!product) {
       return res.status(404).json({ msg: "Product not found" });

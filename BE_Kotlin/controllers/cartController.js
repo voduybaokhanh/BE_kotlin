@@ -22,7 +22,7 @@ exports.getAllCarts = async (req, res) => {
  */
 exports.getCartById = async (req, res) => {
   try {
-    const cart = await Cart.findOne({ CartID: req.params.id });
+    const cart = await Cart.findById(req.params.id);
 
     if (!cart) {
       return res.status(404).json({ msg: "Cart not found" });
@@ -59,26 +59,11 @@ exports.getCartByEmail = async (req, res) => {
  * @apiName CreateCart
  */
 exports.createCart = async (req, res) => {
-  const { CartID, Email } = req.body;
+  const { Email } = req.body;
 
   try {
-    // Kiểm tra xem giỏ hàng ID đã tồn tại chưa
-    let cart = await Cart.findOne({ CartID });
-
-    if (cart) {
-      return res.status(400).json({ msg: "Cart already exists" });
-    }
-
-    // Kiểm tra xem email đã có giỏ hàng chưa
-    let existingCart = await Cart.findOne({ Email });
-
-    if (existingCart) {
-      return res.status(400).json({ msg: "This email already has a cart" });
-    }
-
     // Tạo giỏ hàng mới
-    cart = new Cart({
-      CartID,
+    const cart = new Cart({
       Email,
     });
 
@@ -96,14 +81,14 @@ exports.createCart = async (req, res) => {
  */
 exports.deleteCart = async (req, res) => {
   try {
-    const cart = await Cart.findOneAndDelete({ CartID: req.params.id });
+    const cart = await Cart.findByIdAndDelete(req.params.id);
 
     if (!cart) {
       return res.status(404).json({ msg: "Cart not found" });
     }
 
     // Xóa tất cả các mục trong giỏ hàng
-    await CartItem.deleteMany({ CartID: req.params.id });
+    await CartItem.deleteMany(req.params.id);
 
     res.json({ msg: "Cart and all items removed" });
   } catch (err) {

@@ -1,4 +1,5 @@
 const Address = require("../models/Address");
+const mongoose = require("mongoose");
 
 /**
  * @api {get} /api/addresses Lấy tất cả địa chỉ
@@ -20,7 +21,7 @@ exports.getAllAddresses = async (req, res) => {
  */
 exports.getAddressById = async (req, res) => {
   try {
-    const address = await Address.findOne({ AddressID: req.params.id });
+    const address = await Address.findById(req.params.id);
 
     if (!address) {
       return res.status(404).json({ msg: "Address not found" });
@@ -52,23 +53,16 @@ exports.getAddressesByEmail = async (req, res) => {
  * @apiName CreateAddress
  */
 exports.createAddress = async (req, res) => {
-  const { AddressID, Email, Street, City, Country } = req.body;
+  const { Email, Street, City, Country } = req.body;
 
   try {
-    // Kiểm tra xem địa chỉ ID đã tồn tại chưa
-    let address = await Address.findOne({ AddressID });
-
-    if (address) {
-      return res.status(400).json({ msg: "Address already exists" });
-    }
-
-    // Tạo địa chỉ mới
-    address = new Address({
-      AddressID,
+    // Tạo địa chỉ mới với AddressID tự động
+    const address = new Address({
+      AddressID: new mongoose.Types.ObjectId().toString(), // Tạo ID duy nhất
       Email,
       Street,
       City,
-      Country
+      Country,
     });
 
     await address.save();
@@ -87,7 +81,7 @@ exports.updateAddress = async (req, res) => {
   const { Email, Street, City, Country } = req.body;
 
   try {
-    let address = await Address.findOne({ AddressID: req.params.id });
+    let address = await Address.findById(req.params.id);
 
     if (!address) {
       return res.status(404).json({ msg: "Address not found" });
@@ -113,7 +107,7 @@ exports.updateAddress = async (req, res) => {
  */
 exports.deleteAddress = async (req, res) => {
   try {
-    const address = await Address.findOneAndDelete({ AddressID: req.params.id });
+    const address = await Address.findByIdAndDelete(req.params.id);
 
     if (!address) {
       return res.status(404).json({ msg: "Address not found" });
