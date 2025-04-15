@@ -52,6 +52,16 @@ exports.createPaymentMethod = async (req, res) => {
       return res.status(400).json({ msg: "Payment method already exists" });
     }
 
+    // Kiểm tra xem PaymentMethodID đã tồn tại chưa (nếu được cung cấp)
+    if (PaymentMethodID) {
+      const existingPaymentMethodById = await PaymentMethod.findOne({
+        PaymentMethodID,
+      });
+      if (existingPaymentMethodById) {
+        return res.status(400).json({ msg: "Payment method ID already exists" });
+      }
+    }
+
     // Tạo ID tự động nếu không được cung cấp
     const finalPaymentMethodID =
       PaymentMethodID || new mongoose.Types.ObjectId().toString();
@@ -62,10 +72,25 @@ exports.createPaymentMethod = async (req, res) => {
       MethodName,
     });
 
-    await paymentMethod.save();
-    res.json(paymentMethod);
+    try {
+      await paymentMethod.save();
+      res.json(paymentMethod);
+    } catch (saveErr) {
+      // Xử lý lỗi trùng lặp khóa
+      if (saveErr.code === 11000) {
+        // Tạo một ID mới nếu xảy ra lỗi trùng lặp
+        const newPaymentMethod = new PaymentMethod({
+          PaymentMethodID: new mongoose.Types.ObjectId().toString(),
+          MethodName,
+        });
+        await newPaymentMethod.save();
+        res.json(newPaymentMethod);
+      } else {
+        throw saveErr; // Ném lỗi để xử lý ở catch bên ngoài
+      }
+    }
   } catch (err) {
-    console.error(err.message);
+    console.error("Error creating payment method:", err.message);
     res.status(500).send("Server Error");
   }
 };

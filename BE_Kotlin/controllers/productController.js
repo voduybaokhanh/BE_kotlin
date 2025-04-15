@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 const Product = require("../models/Product");
 
+// We've moved the migration logic to database.js
+
 /**
  * @api {get} /api/products Lấy tất cả products
  * @apiName GetAllProducts
@@ -16,15 +18,29 @@ exports.getAllProducts = async (req, res) => {
 };
 
 /**
- * @api {get} /api/products/:id Lấy product theo ID
+ * @api {get} /api/products/:id Lấy product theo ProductID
  * @apiName GetProductById
  */
 exports.getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id).populate(
+    // First try to find by ProductID
+    let product = await Product.findOne({ ProductID: req.params.id }).populate(
       "CateID",
       "CateName"
     );
+
+    // If not found, try to find by MongoDB _id for backward compatibility
+    if (!product) {
+      try {
+        product = await Product.findById(req.params.id).populate(
+          "CateID",
+          "CateName"
+        );
+      } catch (idErr) {
+        // If error occurs with findById, it's likely not a valid ObjectId
+        // Just continue, product will remain null
+      }
+    }
 
     if (!product) {
       return res.status(404).json({ msg: "Product not found" });
@@ -65,7 +81,7 @@ exports.createProduct = async (req, res) => {
 
     // No need to check for null IDs as we're using sparse: true in the model
 
-    const { CateID, ProductName, Description, Price, ProductID, ID } = req.body;
+    const { CateID, ProductName, Description, Price, ProductID } = req.body;
     let Image = null;
 
     // Check if any files were uploaded
@@ -78,9 +94,8 @@ exports.createProduct = async (req, res) => {
       console.log("No image file uploaded");
     }
 
-    // Create product data object with generated IDs
+    // Create product data object with generated ProductID
     const productData = {
-      ID: ID || new mongoose.Types.ObjectId().toString(), // Use provided ID or generate a new one
       ProductID: ProductID || new mongoose.Types.ObjectId().toString(), // Use provided ProductID or generate a new one
       CateID,
       ProductName,
@@ -108,7 +123,18 @@ exports.updateProduct = async (req, res) => {
   const { CateID, ProductName, Description, Price, Image } = req.body;
 
   try {
-    let product = await Product.findById(req.params.id);
+    // First try to find by ProductID
+    let product = await Product.findOne({ ProductID: req.params.id });
+
+    // If not found, try to find by MongoDB _id for backward compatibility
+    if (!product) {
+      try {
+        product = await Product.findById(req.params.id);
+      } catch (idErr) {
+        // If error occurs with findById, it's likely not a valid ObjectId
+        // Just continue, product will remain null
+      }
+    }
 
     if (!product) {
       return res.status(404).json({ msg: "Product not found" });
@@ -135,7 +161,18 @@ exports.updateProduct = async (req, res) => {
  */
 exports.deleteProduct = async (req, res) => {
   try {
-    const product = await Product.findByIdAndDelete(req.params.id);
+    // First try to find and delete by ProductID
+    let product = await Product.findOneAndDelete({ ProductID: req.params.id });
+
+    // If not found, try to find and delete by MongoDB _id for backward compatibility
+    if (!product) {
+      try {
+        product = await Product.findByIdAndDelete(req.params.id);
+      } catch (idErr) {
+        // If error occurs with findByIdAndDelete, it's likely not a valid ObjectId
+        // Just continue, product will remain null
+      }
+    }
 
     if (!product) {
       return res.status(404).json({ msg: "Product not found" });

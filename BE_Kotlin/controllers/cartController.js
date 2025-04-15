@@ -112,7 +112,10 @@ exports.deleteCart = async (req, res) => {
   }
 };
 
-// Lấy tất cả các mục trong giỏ hàng
+/**
+ * @api {get} /api/carts/:cartId/items Lấy tất cả các mục trong giỏ hàng
+ * @apiName GetCartItems
+ */
 exports.getCartItems = async (req, res) => {
   try {
     const cartItems = await CartItem.find({ CartID: req.params.cartId });
@@ -135,7 +138,10 @@ exports.getCartItems = async (req, res) => {
   }
 };
 
-// Thêm sản phẩm vào giỏ hàng
+/**
+ * @api {post} /api/carts/items Thêm sản phẩm vào giỏ hàng
+ * @apiName AddItemToCart
+ */
 exports.addItemToCart = async (req, res) => {
   const { CartID, ProductID, Quantity } = req.body;
 
@@ -176,7 +182,10 @@ exports.addItemToCart = async (req, res) => {
   }
 };
 
-// Cập nhật số lượng sản phẩm trong giỏ hàng
+/**
+ * @api {put} /api/carts/:cartId/items/:productId Cập nhật số lượng sản phẩm trong giỏ hàng
+ * @apiName UpdateCartItem
+ */
 exports.updateCartItem = async (req, res) => {
   const { Quantity } = req.body;
 
@@ -211,7 +220,10 @@ exports.updateCartItem = async (req, res) => {
   }
 };
 
-// Xóa sản phẩm khỏi giỏ hàng
+/**
+ * @api {delete} /api/carts/:cartId/items/:productId Xóa sản phẩm khỏi giỏ hàng
+ * @apiName RemoveItemFromCart
+ */
 exports.removeItemFromCart = async (req, res) => {
   try {
     const cartItem = await CartItem.findOneAndDelete({

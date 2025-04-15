@@ -26,6 +26,85 @@ const paymentMethodsRouter = require("./routes/paymentMethods");
 // Kết nối đến MongoDB
 connectDB();
 
+// Direct fix for duplicate key errors
+const mongoose = require("mongoose");
+mongoose.connection.once("open", async () => {
+  try {
+    console.log("Applying direct fix for duplicate key errors...");
+    const db = mongoose.connection.db;
+
+    // Try to drop the problematic index for products
+    try {
+      await db.command({
+        dropIndexes: "products",
+        index: "ID_1",
+      });
+      console.log(
+        "Successfully dropped ID_1 index from products directly from app.js"
+      );
+    } catch (error) {
+      console.log("Error dropping products index from app.js:", error.message);
+    }
+
+    // Try to drop the problematic index for payment methods
+    try {
+      await db.command({
+        dropIndexes: "paymentmethods",
+        index: "PaymentMethodID_1",
+      });
+      console.log(
+        "Successfully dropped PaymentMethodID_1 index from payment methods directly from app.js"
+      );
+    } catch (error) {
+      console.log(
+        "Error dropping payment methods index from app.js:",
+        error.message
+      );
+    }
+
+    // Fix duplicate PaymentMethodIDs
+    try {
+      const paymentMethodsCollection = db.collection("paymentmethods");
+
+      // Get all payment methods
+      const allPaymentMethods = await paymentMethodsCollection
+        .find({})
+        .toArray();
+      console.log(
+        `Found ${allPaymentMethods.length} payment methods to check for duplicates`
+      );
+
+      // Track seen IDs to find duplicates
+      const seenIds = new Set();
+      let fixCount = 0;
+
+      // Update any duplicates with new IDs
+      for (const method of allPaymentMethods) {
+        if (method.PaymentMethodID && seenIds.has(method.PaymentMethodID)) {
+          // This is a duplicate, update it with a new ID
+          const newId = new mongoose.Types.ObjectId().toString();
+          await paymentMethodsCollection.updateOne(
+            { _id: method._id },
+            { $set: { PaymentMethodID: newId } }
+          );
+          fixCount++;
+        } else if (method.PaymentMethodID) {
+          seenIds.add(method.PaymentMethodID);
+        }
+      }
+
+      console.log(`Fixed ${fixCount} duplicate payment method IDs`);
+    } catch (error) {
+      console.error(
+        "Error fixing duplicate payment method IDs:",
+        error.message
+      );
+    }
+  } catch (error) {
+    console.error("Error in direct fix:", error);
+  }
+});
+
 const app = express();
 
 // Security middleware

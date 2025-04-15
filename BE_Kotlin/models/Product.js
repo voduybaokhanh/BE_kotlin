@@ -4,12 +4,6 @@ const Schema = mongoose.Schema;
 // Product Schema
 const ProductSchema = new Schema(
   {
-    // Add ID field with unique constraint
-    ID: {
-      type: String,
-      unique: true,
-      sparse: true, // Cho phép null nhưng không cho phép trùng lặp khi có giá trị
-    },
     ProductID: {
       type: String,
       unique: true,
