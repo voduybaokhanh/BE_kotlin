@@ -58,7 +58,15 @@ exports.getProductsByCategory = async (req, res) => {
  * @apiName CreateProduct
  */
 exports.createProduct = async (req, res) => {
-  const { CateID, ProductName, Description, Price, Image } = req.body;
+  const { CateID, ProductName, Description, Price } = req.body;
+  let Image;
+
+  if (req.file) {
+    // req.file contains information about the uploaded file
+    Image = req.file.path; // Or req.file.filename depending on your storage config
+  } else {
+    Image = null; // Or a default image URL if you have one
+  }
 
   try {
     // Tạo product mới
