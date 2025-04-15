@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const OrderItem = require("../models/OrderItem");
 const Product = require("../models/Product");
 const Order = require("../models/Order");
@@ -38,7 +39,7 @@ exports.getOrderItemsByOrderId = async (req, res) => {
 };
 
 /**
- * @api {get} /api/order-items/:orderId/:productId Lấy mục trong đơn hàng theo OrderID và ProductID
+ * @api {get} /api/order-items/order/:orderId/product/:productId Lấy mục trong đơn hàng theo OrderID và ProductID
  * @apiName GetOrderItemByIds
  */
 exports.getOrderItemByIds = async (req, res) => {
@@ -46,6 +47,31 @@ exports.getOrderItemByIds = async (req, res) => {
     const orderItem = await OrderItem.findOne({
       OrderID: req.params.orderId,
       ProductID: req.params.productId,
+    }).populate({
+      path: "ProductID",
+      model: "Product",
+      select: "ProductName Price Image Description",
+    });
+
+    if (!orderItem) {
+      return res.status(404).json({ msg: "Order item not found" });
+    }
+
+    res.json(orderItem);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server Error");
+  }
+};
+
+/**
+ * @api {get} /api/order-items/:id Lấy mục trong đơn hàng theo ID
+ * @apiName GetOrderItemById
+ */
+exports.getOrderItemById = async (req, res) => {
+  try {
+    const orderItem = await OrderItem.findOne({
+      OrderItemID: req.params.id,
     }).populate({
       path: "ProductID",
       model: "Product",
@@ -92,8 +118,9 @@ exports.createOrderItem = async (req, res) => {
         .json({ msg: "Item already exists in order. Use PUT to update." });
     }
 
-    // Tạo mục mới
+    // Tạo mục mới với OrderItemID
     orderItem = new OrderItem({
+      OrderItemID: new mongoose.Types.ObjectId().toString(),
       OrderID,
       ProductID,
       Quantity,
@@ -113,8 +140,8 @@ exports.createOrderItem = async (req, res) => {
 };
 
 /**
- * @api {put} /api/order-items/:orderId/:productId Cập nhật mục trong đơn hàng
- * @apiName UpdateOrderItem
+ * @api {put} /api/order-items/order/:orderId/product/:productId Cập nhật mục trong đơn hàng theo OrderID và ProductID
+ * @apiName UpdateOrderItemByOrderAndProduct
  */
 exports.updateOrderItem = async (req, res) => {
   const { Quantity, Price } = req.body;
@@ -149,14 +176,70 @@ exports.updateOrderItem = async (req, res) => {
 };
 
 /**
- * @api {delete} /api/order-items/:orderId/:productId Xóa mục khỏi đơn hàng
- * @apiName DeleteOrderItem
+ * @api {put} /api/order-items/:id Cập nhật mục trong đơn hàng theo ID
+ * @apiName UpdateOrderItemById
+ */
+exports.updateOrderItemById = async (req, res) => {
+  const { Quantity, Price } = req.body;
+
+  try {
+    let orderItem = await OrderItem.findOne({
+      OrderItemID: req.params.id,
+    });
+
+    if (!orderItem) {
+      return res.status(404).json({ msg: "Order item not found" });
+    }
+
+    // Cập nhật thông tin
+    if (Quantity !== undefined) orderItem.Quantity = Quantity;
+    if (Price !== undefined) orderItem.Price = Price;
+
+    await orderItem.save();
+
+    // Lấy thông tin chi tiết sản phẩm
+    const product = await Product.findOne({ ProductID: orderItem.ProductID });
+
+    res.json({
+      ...orderItem.toObject(),
+      product: product,
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server Error");
+  }
+};
+
+/**
+ * @api {delete} /api/order-items/order/:orderId/product/:productId Xóa mục khỏi đơn hàng theo OrderID và ProductID
+ * @apiName DeleteOrderItemByOrderAndProduct
  */
 exports.deleteOrderItem = async (req, res) => {
   try {
     const orderItem = await OrderItem.findOneAndDelete({
       OrderID: req.params.orderId,
       ProductID: req.params.productId,
+    });
+
+    if (!orderItem) {
+      return res.status(404).json({ msg: "Order item not found" });
+    }
+
+    res.json({ msg: "Item removed from order" });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server Error");
+  }
+};
+
+/**
+ * @api {delete} /api/order-items/:id Xóa mục khỏi đơn hàng theo ID
+ * @apiName DeleteOrderItemById
+ */
+exports.deleteOrderItemById = async (req, res) => {
+  try {
+    const orderItem = await OrderItem.findOneAndDelete({
+      OrderItemID: req.params.id,
     });
 
     if (!orderItem) {

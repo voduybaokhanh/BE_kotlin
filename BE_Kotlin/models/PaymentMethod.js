@@ -4,7 +4,12 @@ const Schema = mongoose.Schema;
 // PaymentMethod Schema
 const PaymentMethodSchema = new Schema(
   {
-    MethodName: { type: String, required: true },
+    PaymentMethodID: { 
+      type: String, 
+      unique: true,
+      sparse: true, // Cho phép null nhưng không cho phép trùng lặp khi có giá trị
+    },
+    MethodName: { type: String, required: true, unique: true },
   },
   { timestamps: true }
 );

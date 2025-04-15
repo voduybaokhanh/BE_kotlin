@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Order = require("../models/Order");
 const OrderItem = require("../models/OrderItem");
 const Product = require("../models/Product");
@@ -24,8 +25,8 @@ exports.getOrderById = async (req, res) => {
   try {
     const order = await Order.findOne({ OrderID: req.params.id })
       .populate("Email", "FullName")
-      .populate("Address")
-      .populate("PaymentMethod", "MethodName");
+      .populate("AddressID")
+      .populate("PaymentMethodID", "MethodName");
 
     if (!order) {
       return res.status(404).json({ msg: "Order not found" });
@@ -57,8 +58,8 @@ exports.getOrderById = async (req, res) => {
 exports.getOrdersByEmail = async (req, res) => {
   try {
     const orders = await Order.find({ Email: req.params.email })
-      .populate("Address")
-      .populate("PaymentMethod", "MethodName");
+      .populate("AddressID")
+      .populate("PaymentMethodID", "MethodName");
     res.json(orders);
   } catch (err) {
     console.error(err.message);
@@ -71,7 +72,7 @@ exports.getOrdersByEmail = async (req, res) => {
  * @apiName CreateOrder
  */
 exports.createOrder = async (req, res) => {
-  const { OrderID, Email, Address, PaymentMethod, OrderItems } = req.body;
+  const { OrderID, Email, AddressID, PaymentMethodID, OrderItems } = req.body;
 
   try {
     // Kiểm tra xem đơn hàng ID đã tồn tại chưa
@@ -83,10 +84,10 @@ exports.createOrder = async (req, res) => {
 
     // Tạo đơn hàng mới
     order = new Order({
-      OrderID,
+      OrderID: OrderID || new mongoose.Types.ObjectId().toString(),
       Email,
-      Address,
-      PaymentMethod,
+      AddressID,
+      PaymentMethodID,
       OrderDate: new Date(),
       Status: "Pending",
     });

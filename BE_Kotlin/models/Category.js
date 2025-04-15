@@ -7,12 +7,7 @@ const CategorySchema = new Schema(
     CateID: {
       type: String,
       unique: true,
-      default: function () {
-        // Generate a unique ID based on timestamp and random number
-        return (
-          Date.now().toString() + Math.floor(Math.random() * 1000).toString()
-        );
-      },
+      sparse: true, // Cho phép null nhưng không cho phép trùng lặp khi có giá trị
     },
     CateName: { type: String, required: true },
   },

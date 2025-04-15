@@ -4,13 +4,18 @@ const Schema = mongoose.Schema;
 // OrderItem Schema
 const OrderItemSchema = new Schema(
   {
+    OrderItemID: {
+      type: String,
+      unique: true,
+      sparse: true, // Cho phép null nhưng không cho phép trùng lặp khi có giá trị
+    },
     OrderID: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
       ref: "Order",
       required: true,
     }, // FK1
     ProductID: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
       ref: "Product",
       required: true,
     }, // FK2

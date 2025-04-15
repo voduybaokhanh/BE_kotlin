@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Product = require("../models/Product");
 
 /**
@@ -62,56 +63,7 @@ exports.createProduct = async (req, res) => {
     console.log("Request body:", req.body);
     console.log("Request files:", req.files);
 
-    // First, check if there are any existing products with null ID or ProductID
-    // and update them to prevent duplicate key errors
-    try {
-      // Fix products with null ID
-      const productsWithNullID = await Product.find({ ID: null });
-      if (productsWithNullID.length > 0) {
-        console.log(
-          `Found ${productsWithNullID.length} products with null ID. Updating them...`
-        );
-
-        for (const product of productsWithNullID) {
-          const newID =
-            "ID_" +
-            Date.now().toString() +
-            Math.floor(Math.random() * 1000).toString();
-          product.ID = newID;
-          await product.save();
-          console.log(`Updated product ${product._id} with new ID: ${newID}`);
-
-          // Add a small delay to ensure unique timestamps
-          await new Promise((resolve) => setTimeout(resolve, 10));
-        }
-      }
-
-      // Fix products with null ProductID
-      const productsWithNullProductID = await Product.find({ ProductID: null });
-      if (productsWithNullProductID.length > 0) {
-        console.log(
-          `Found ${productsWithNullProductID.length} products with null ProductID. Updating them...`
-        );
-
-        for (const product of productsWithNullProductID) {
-          const newProductID =
-            "PROD_" +
-            Date.now().toString() +
-            Math.floor(Math.random() * 1000).toString();
-          product.ProductID = newProductID;
-          await product.save();
-          console.log(
-            `Updated product ${product._id} with new ProductID: ${newProductID}`
-          );
-
-          // Add a small delay to ensure unique timestamps
-          await new Promise((resolve) => setTimeout(resolve, 10));
-        }
-      }
-    } catch (fixErr) {
-      console.error("Error fixing existing products:", fixErr);
-      // Continue with creating the new product even if fixing fails
-    }
+    // No need to check for null IDs as we're using sparse: true in the model
 
     const { CateID, ProductName, Description, Price, ProductID, ID } = req.body;
     let Image = null;
@@ -126,25 +78,16 @@ exports.createProduct = async (req, res) => {
       console.log("No image file uploaded");
     }
 
-    // Create product data object
+    // Create product data object with generated IDs
     const productData = {
+      ID: ID || new mongoose.Types.ObjectId().toString(), // Use provided ID or generate a new one
+      ProductID: ProductID || new mongoose.Types.ObjectId().toString(), // Use provided ProductID or generate a new one
       CateID,
       ProductName,
       Description,
       Price,
       Image,
     };
-
-    // Only add ID if it's explicitly provided
-    if (ID !== undefined && ID !== null) {
-      productData.ID = ID;
-    }
-
-    // Only add ProductID if it's explicitly provided
-    if (ProductID !== undefined && ProductID !== null) {
-      productData.ProductID = ProductID;
-    }
-    // If ID or ProductID is not provided, the default function in the schema will generate one
 
     // Tạo product mới
     const product = new Product(productData);

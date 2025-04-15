@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Category = require("../models/Category");
 
 /**
@@ -41,16 +42,11 @@ exports.createCategory = async (req, res) => {
   const { CateName, CateID } = req.body;
 
   try {
-    // Create a new category object
+    // Create a new category object with generated CateID
     const categoryData = {
       CateName,
+      CateID: CateID || new mongoose.Types.ObjectId().toString(), // Use provided CateID or generate a new one
     };
-
-    // Only add CateID to the object if it's explicitly provided
-    if (CateID !== undefined && CateID !== null) {
-      categoryData.CateID = CateID;
-    }
-    // If CateID is not provided, the default function in the schema will generate one
 
     // Tạo category mới
     const category = new Category(categoryData);

@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const PaymentMethod = require("../models/PaymentMethod");
 
 /**
@@ -43,16 +44,21 @@ exports.createPaymentMethod = async (req, res) => {
   const { PaymentMethodID, MethodName } = req.body;
 
   try {
-    // Kiểm tra xem phương thức thanh toán ID đã tồn tại chưa
-    let paymentMethod = await PaymentMethod.findOne({ PaymentMethodID });
-
-    if (paymentMethod) {
+    // Kiểm tra xem tên phương thức thanh toán đã tồn tại chưa
+    let existingPaymentMethodByName = await PaymentMethod.findOne({
+      MethodName,
+    });
+    if (existingPaymentMethodByName) {
       return res.status(400).json({ msg: "Payment method already exists" });
     }
 
+    // Tạo ID tự động nếu không được cung cấp
+    const finalPaymentMethodID =
+      PaymentMethodID || new mongoose.Types.ObjectId().toString();
+
     // Tạo phương thức thanh toán mới
-    paymentMethod = new PaymentMethod({
-      PaymentMethodID,
+    const paymentMethod = new PaymentMethod({
+      PaymentMethodID: finalPaymentMethodID,
       MethodName,
     });
 

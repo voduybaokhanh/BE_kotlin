@@ -4,45 +4,19 @@ const Schema = mongoose.Schema;
 // Product Schema
 const ProductSchema = new Schema(
   {
-    // Add ID field with unique constraint and default value generator
+    // Add ID field with unique constraint
     ID: {
       type: String,
       unique: true,
-      default: function () {
-        // Generate a unique ID based on timestamp and random number
-        return (
-          "ID_" +
-          Date.now().toString() +
-          Math.floor(Math.random() * 1000).toString()
-        );
-      },
+      sparse: true, // Cho phép null nhưng không cho phép trùng lặp khi có giá trị
     },
     ProductID: {
       type: String,
       unique: true,
-      default: function () {
-        // Generate a unique ID based on timestamp and random number
-        return (
-          "PROD_" +
-          Date.now().toString() +
-          Math.floor(Math.random() * 1000).toString()
-        );
-      },
-    },
-    ProductID: {
-      type: String,
-      unique: true,
-      default: function () {
-        // Generate a unique ID based on timestamp and random number
-        return (
-          "PROD_" +
-          Date.now().toString() +
-          Math.floor(Math.random() * 1000).toString()
-        );
-      },
+      sparse: true, // Cho phép null nhưng không cho phép trùng lặp khi có giá trị
     },
     CateID: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
       ref: "Category",
       required: true,
     }, // FK

@@ -4,18 +4,23 @@ const Schema = mongoose.Schema;
 // Order Schema
 const OrderSchema = new Schema(
   {
-    Address: {
-      type: mongoose.Schema.Types.ObjectId,
+    OrderID: {
+      type: String,
+      unique: true,
+      sparse: true, // Cho phép null nhưng không cho phép trùng lặp khi có giá trị
+    },
+    AddressID: {
+      type: String,
       ref: "Address",
       required: true,
     }, // FK
-    PaymentMethod: {
-      type: mongoose.Schema.Types.ObjectId,
+    PaymentMethodID: {
+      type: String,
       ref: "PaymentMethod",
       required: true,
     }, // FK
     OrderDate: { type: Date, default: Date.now },
-    Status: { type: mongoose.Schema.Types.ObjectId, default: "Pending" }, // e.g., Pending, Processing, Shipped, Delivered
+    Status: { type: String, default: "Pending" }, // e.g., Pending, Processing, Shipped, Delivered
   },
   { timestamps: true }
 );

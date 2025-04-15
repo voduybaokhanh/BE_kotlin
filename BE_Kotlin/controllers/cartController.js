@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Cart = require("../models/Cart");
 const CartItem = require("../models/CartItem");
 const Product = require("../models/Product");
@@ -60,45 +61,15 @@ exports.getCartByEmail = async (req, res) => {
  */
 exports.createCart = async (req, res) => {
   try {
-    // First, check if there are any existing carts with null CartID
-    // and update them to prevent duplicate key errors
-    try {
-      const cartsWithNullCartID = await Cart.find({ CartID: null });
-      if (cartsWithNullCartID.length > 0) {
-        console.log(
-          `Found ${cartsWithNullCartID.length} carts with null CartID. Updating them...`
-        );
-
-        for (const cart of cartsWithNullCartID) {
-          const newCartID =
-            "CART_" +
-            Date.now().toString() +
-            Math.floor(Math.random() * 1000).toString();
-          cart.CartID = newCartID;
-          await cart.save();
-          console.log(`Updated cart ${cart._id} with new CartID: ${newCartID}`);
-
-          // Add a small delay to ensure unique timestamps
-          await new Promise((resolve) => setTimeout(resolve, 10));
-        }
-      }
-    } catch (fixErr) {
-      console.error("Error fixing existing carts:", fixErr);
-      // Continue with creating the new cart even if fixing fails
-    }
+    // No need to check for null CartIDs as we're using sparse: true in the model
 
     const { Email, CartID } = req.body;
 
-    // Create cart data object
+    // Create cart data object with generated CartID
     const cartData = {
       Email,
+      CartID: CartID || new mongoose.Types.ObjectId().toString(), // Use provided CartID or generate a new one
     };
-
-    // Only add CartID if it's explicitly provided
-    if (CartID !== undefined && CartID !== null) {
-      cartData.CartID = CartID;
-    }
-    // If CartID is not provided, the default function in the schema will generate one
 
     // Tạo giỏ hàng mới
     const cart = new Cart(cartData);
