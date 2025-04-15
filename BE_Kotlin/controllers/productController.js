@@ -1,10 +1,12 @@
 const Product = require("../models/Product");
 
-// Lấy tất cả products
+/**
+ * @api {get} /api/products Lấy tất cả products
+ * @apiName GetAllProducts
+ */
 exports.getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find()
-      .populate('CateID', 'CateName');
+    const products = await Product.find().populate("CateID", "CateName");
     res.json(products);
   } catch (err) {
     console.error(err.message);
@@ -12,11 +14,15 @@ exports.getAllProducts = async (req, res) => {
   }
 };
 
-// Lấy product theo ID
+/**
+ * @api {get} /api/products/:id Lấy product theo ID
+ * @apiName GetProductById
+ */
 exports.getProductById = async (req, res) => {
   try {
-    const product = await Product.findOne({ ProductID: req.params.id })
-      .populate('CateID', 'CateName');
+    const product = await Product.findOne({
+      ProductID: req.params.id,
+    }).populate("CateID", "CateName");
 
     if (!product) {
       return res.status(404).json({ msg: "Product not found" });
@@ -29,11 +35,16 @@ exports.getProductById = async (req, res) => {
   }
 };
 
-// Lấy products theo category
+/**
+ * @api {get} /api/products/category/:cateId Lấy products theo category
+ * @apiName GetProductsByCategory
+ */
 exports.getProductsByCategory = async (req, res) => {
   try {
-    const products = await Product.find({ CateID: req.params.cateId })
-      .populate('CateID', 'CateName');
+    const products = await Product.find({ CateID: req.params.cateId }).populate(
+      "CateID",
+      "CateName"
+    );
     res.json(products);
   } catch (err) {
     console.error(err.message);
@@ -41,7 +52,10 @@ exports.getProductsByCategory = async (req, res) => {
   }
 };
 
-// Tạo product mới
+/**
+ * @api {post} /api/products Tạo product mới
+ * @apiName CreateProduct
+ */
 exports.createProduct = async (req, res) => {
   const { ProductID, CateID, ProductName, Description, Price, Image } =
     req.body;
@@ -72,7 +86,10 @@ exports.createProduct = async (req, res) => {
   }
 };
 
-// Cập nhật product
+/**
+ * @api {put} /api/products/:id Cập nhật product
+ * @apiName UpdateProduct
+ */
 exports.updateProduct = async (req, res) => {
   const { CateID, ProductName, Description, Price, Image } = req.body;
 
@@ -98,7 +115,10 @@ exports.updateProduct = async (req, res) => {
   }
 };
 
-// Xóa product
+/**
+ * @api {delete} /api/products/:id Xóa product
+ * @apiName DeleteProduct
+ */
 exports.deleteProduct = async (req, res) => {
   try {
     const product = await Product.findOneAndDelete({

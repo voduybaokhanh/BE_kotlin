@@ -1,21 +1,20 @@
 const Account = require("../models/Account");
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const { validationResult } = require('express-validator');
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const { validationResult } = require("express-validator");
 
 /**
- * @desc    Lấy tất cả accounts (Admin only)
- * @route   GET /api/accounts
- * @access  Private/Admin
+ * @api {get} /api/accounts Lấy tất cả accounts
+ * @apiName GetAllAccounts
  */
 exports.getAllAccounts = async (req, res, next) => {
   try {
     const accounts = await Account.find().select("-Password");
-    
+
     res.status(200).json({
       success: true,
       count: accounts.length,
-      data: accounts
+      data: accounts,
     });
   } catch (err) {
     next(err);
@@ -23,31 +22,32 @@ exports.getAllAccounts = async (req, res, next) => {
 };
 
 /**
- * @desc    Lấy account theo Email
- * @route   GET /api/accounts/:email
- * @access  Private
+ * @api {get} /api/accounts/:email Lấy account theo Email
+ * @apiName GetAccountByEmail
  */
 exports.getAccountByEmail = async (req, res, next) => {
   try {
-    const account = await Account.findOne({ Email: req.params.email }).select("-Password");
+    const account = await Account.findOne({ Email: req.params.email }).select(
+      "-Password"
+    );
 
     if (!account) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         success: false,
-        message: "Không tìm thấy tài khoản" 
+        message: "Không tìm thấy tài khoản",
       });
     }
 
-    // Kiểm tra quyền truy cập (chỉ admin hoặc chính người dùng đó mới có quyền xem)
-    if (req.user && (req.user.role === 'admin' || req.user.Email === req.params.email)) {
+    // Kiểm tra quyền truy cập (chỉ chính người dùng đó mới có quyền xem)
+    if (req.user && req.user.Email === req.params.email) {
       return res.status(200).json({
         success: true,
-        data: account
+        data: account,
       });
     } else {
       return res.status(403).json({
         success: false,
-        message: "Không có quyền truy cập thông tin này"
+        message: "Không có quyền truy cập thông tin này",
       });
     }
   } catch (err) {
@@ -56,16 +56,15 @@ exports.getAccountByEmail = async (req, res, next) => {
 };
 
 /**
- * @desc    Đăng ký tài khoản mới
- * @route   POST /api/accounts/register
- * @access  Public
+ * @api {post} /api/accounts/register Đăng ký tài khoản mới
+ * @apiName Register
  */
 exports.register = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ 
+    return res.status(400).json({
       success: false,
-      errors: errors.array() 
+      errors: errors.array(),
     });
   }
 
@@ -76,9 +75,9 @@ exports.register = async (req, res, next) => {
     let account = await Account.findOne({ Email });
 
     if (account) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        message: "Email đã được sử dụng" 
+        message: "Email đã được sử dụng",
       });
     }
 
@@ -91,7 +90,6 @@ exports.register = async (req, res, next) => {
       Email,
       FullName,
       Password: hashedPassword,
-      role: 'user' // Mặc định là user
     });
 
     await account.save();
@@ -105,8 +103,7 @@ exports.register = async (req, res, next) => {
       data: {
         Email: account.Email,
         FullName: account.FullName,
-        role: account.role
-      }
+      },
     });
   } catch (err) {
     next(err);
@@ -114,16 +111,15 @@ exports.register = async (req, res, next) => {
 };
 
 /**
- * @desc    Đăng nhập
- * @route   POST /api/accounts/login
- * @access  Public
+ * @api {post} /api/accounts/login Đăng nhập
+ * @apiName Login
  */
 exports.login = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ 
+    return res.status(400).json({
       success: false,
-      errors: errors.array() 
+      errors: errors.array(),
     });
   }
 
@@ -134,19 +130,19 @@ exports.login = async (req, res, next) => {
     const account = await Account.findOne({ Email });
 
     if (!account) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         success: false,
-        message: "Email hoặc mật khẩu không đúng" 
+        message: "Email hoặc mật khẩu không đúng",
       });
     }
 
     // Kiểm tra password
     const isMatch = await bcrypt.compare(Password, account.Password);
-    
+
     if (!isMatch) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         success: false,
-        message: "Email hoặc mật khẩu không đúng" 
+        message: "Email hoặc mật khẩu không đúng",
       });
     }
 
@@ -159,8 +155,7 @@ exports.login = async (req, res, next) => {
       data: {
         Email: account.Email,
         FullName: account.FullName,
-        role: account.role
-      }
+      },
     });
   } catch (err) {
     next(err);
@@ -168,28 +163,27 @@ exports.login = async (req, res, next) => {
 };
 
 /**
- * @desc    Cập nhật thông tin tài khoản
- * @route   PUT /api/accounts/:email
- * @access  Private
+ * @api {put} /api/accounts/:email Cập nhật thông tin tài khoản
+ * @apiName UpdateAccount
  */
 exports.updateAccount = async (req, res, next) => {
   try {
     const { FullName, Password, currentPassword } = req.body;
-    
+
     // Kiểm tra quyền truy cập
-    if (req.user.Email !== req.params.email && req.user.role !== 'admin') {
+    if (req.user.Email !== req.params.email) {
       return res.status(403).json({
         success: false,
-        message: "Không có quyền cập nhật tài khoản này"
+        message: "Không có quyền cập nhật tài khoản này",
       });
     }
 
     let account = await Account.findOne({ Email: req.params.email });
 
     if (!account) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         success: false,
-        message: "Không tìm thấy tài khoản" 
+        message: "Không tìm thấy tài khoản",
       });
     }
 
@@ -198,7 +192,7 @@ exports.updateAccount = async (req, res, next) => {
       if (!currentPassword) {
         return res.status(400).json({
           success: false,
-          message: "Vui lòng cung cấp mật khẩu hiện tại"
+          message: "Vui lòng cung cấp mật khẩu hiện tại",
         });
       }
 
@@ -207,7 +201,7 @@ exports.updateAccount = async (req, res, next) => {
       if (!isMatch) {
         return res.status(401).json({
           success: false,
-          message: "Mật khẩu hiện tại không đúng"
+          message: "Mật khẩu hiện tại không đúng",
         });
       }
 
@@ -226,8 +220,7 @@ exports.updateAccount = async (req, res, next) => {
       data: {
         Email: account.Email,
         FullName: account.FullName,
-        role: account.role
-      }
+      },
     });
   } catch (err) {
     next(err);
@@ -235,32 +228,31 @@ exports.updateAccount = async (req, res, next) => {
 };
 
 /**
- * @desc    Xóa tài khoản
- * @route   DELETE /api/accounts/:email
- * @access  Private/Admin
+ * @api {delete} /api/accounts/:email Xóa tài khoản
+ * @apiName DeleteAccount
  */
 exports.deleteAccount = async (req, res, next) => {
   try {
-    // Chỉ admin mới có quyền xóa tài khoản
-    if (req.user.role !== 'admin') {
+    // Chỉ người dùng có thể xóa tài khoản của chính mình
+    if (req.user.Email !== req.params.email) {
       return res.status(403).json({
         success: false,
-        message: "Không có quyền xóa tài khoản"
+        message: "Không có quyền xóa tài khoản này",
       });
     }
 
     const account = await Account.findOneAndDelete({ Email: req.params.email });
 
     if (!account) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         success: false,
-        message: "Không tìm thấy tài khoản" 
+        message: "Không tìm thấy tài khoản",
       });
     }
 
-    res.status(200).json({ 
+    res.status(200).json({
       success: true,
-      message: "Tài khoản đã được xóa" 
+      message: "Tài khoản đã được xóa",
     });
   } catch (err) {
     next(err);
@@ -268,17 +260,18 @@ exports.deleteAccount = async (req, res, next) => {
 };
 
 /**
- * @desc    Lấy thông tin tài khoản hiện tại
- * @route   GET /api/accounts/me
- * @access  Private
+ * @api {get} /api/accounts/me Lấy thông tin tài khoản hiện tại
+ * @apiName GetMe
  */
 exports.getMe = async (req, res, next) => {
   try {
-    const account = await Account.findOne({ Email: req.user.Email }).select('-Password');
-    
+    const account = await Account.findOne({ Email: req.user.Email }).select(
+      "-Password"
+    );
+
     res.status(200).json({
       success: true,
-      data: account
+      data: account,
     });
   } catch (err) {
     next(err);
@@ -286,9 +279,8 @@ exports.getMe = async (req, res, next) => {
 };
 
 /**
- * @desc    Đổi mật khẩu
- * @route   PUT /api/accounts/change-password
- * @access  Private
+ * @api {put} /api/accounts/change-password Đổi mật khẩu
+ * @apiName ChangePassword
  */
 exports.changePassword = async (req, res, next) => {
   try {
@@ -297,7 +289,7 @@ exports.changePassword = async (req, res, next) => {
     if (!currentPassword || !newPassword) {
       return res.status(400).json({
         success: false,
-        message: "Vui lòng cung cấp mật khẩu hiện tại và mật khẩu mới"
+        message: "Vui lòng cung cấp mật khẩu hiện tại và mật khẩu mới",
       });
     }
 
@@ -308,7 +300,7 @@ exports.changePassword = async (req, res, next) => {
     if (!isMatch) {
       return res.status(401).json({
         success: false,
-        message: "Mật khẩu hiện tại không đúng"
+        message: "Mật khẩu hiện tại không đúng",
       });
     }
 
@@ -320,7 +312,7 @@ exports.changePassword = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: "Mật khẩu đã được cập nhật"
+      message: "Mật khẩu đã được cập nhật",
     });
   } catch (err) {
     next(err);
@@ -330,14 +322,13 @@ exports.changePassword = async (req, res, next) => {
 // Helper function to generate JWT token
 const generateToken = (account) => {
   return jwt.sign(
-    { 
+    {
       email: account.Email,
       fullName: account.FullName,
-      role: account.role || 'user'
-    }, 
-    process.env.JWT_SECRET, 
-    { 
-      expiresIn: process.env.JWT_EXPIRE 
+    },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: process.env.JWT_EXPIRE || "30d", // Default to 30 days if not specified
     }
   );
 };

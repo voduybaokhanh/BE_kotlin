@@ -1,6 +1,9 @@
 const Address = require("../models/Address");
 
-// Lấy tất cả địa chỉ
+/**
+ * @api {get} /api/addresses Lấy tất cả địa chỉ
+ * @apiName GetAllAddresses
+ */
 exports.getAllAddresses = async (req, res) => {
   try {
     const addresses = await Address.find();
@@ -11,7 +14,10 @@ exports.getAllAddresses = async (req, res) => {
   }
 };
 
-// Lấy địa chỉ theo ID
+/**
+ * @api {get} /api/addresses/:id Lấy địa chỉ theo ID
+ * @apiName GetAddressById
+ */
 exports.getAddressById = async (req, res) => {
   try {
     const address = await Address.findOne({ AddressID: req.params.id });
@@ -27,7 +33,10 @@ exports.getAddressById = async (req, res) => {
   }
 };
 
-// Lấy địa chỉ theo Email
+/**
+ * @api {get} /api/addresses/email/:email Lấy địa chỉ theo Email
+ * @apiName GetAddressesByEmail
+ */
 exports.getAddressesByEmail = async (req, res) => {
   try {
     const addresses = await Address.find({ Email: req.params.email });
@@ -38,7 +47,10 @@ exports.getAddressesByEmail = async (req, res) => {
   }
 };
 
-// Tạo địa chỉ mới
+/**
+ * @api {post} /api/addresses Tạo địa chỉ mới
+ * @apiName CreateAddress
+ */
 exports.createAddress = async (req, res) => {
   const { AddressID, Email, Street, City, Country } = req.body;
 
@@ -67,7 +79,10 @@ exports.createAddress = async (req, res) => {
   }
 };
 
-// Cập nhật địa chỉ
+/**
+ * @api {put} /api/addresses/:id Cập nhật địa chỉ
+ * @apiName UpdateAddress
+ */
 exports.updateAddress = async (req, res) => {
   const { Email, Street, City, Country } = req.body;
 
@@ -92,7 +107,10 @@ exports.updateAddress = async (req, res) => {
   }
 };
 
-// Xóa địa chỉ
+/**
+ * @api {delete} /api/addresses/:id Xóa địa chỉ
+ * @apiName DeleteAddress
+ */
 exports.deleteAddress = async (req, res) => {
   try {
     const address = await Address.findOneAndDelete({ AddressID: req.params.id });

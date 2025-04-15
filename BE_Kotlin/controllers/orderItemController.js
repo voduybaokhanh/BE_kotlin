@@ -2,7 +2,10 @@ const OrderItem = require("../models/OrderItem");
 const Product = require("../models/Product");
 const Order = require("../models/Order");
 
-// Lấy tất cả các mục trong đơn hàng
+/**
+ * @api {get} /api/order-items Lấy tất cả các mục trong đơn hàng
+ * @apiName GetAllOrderItems
+ */
 exports.getAllOrderItems = async (req, res) => {
   try {
     const orderItems = await OrderItem.find();
@@ -13,15 +16,19 @@ exports.getAllOrderItems = async (req, res) => {
   }
 };
 
-// Lấy các mục trong đơn hàng theo OrderID
+/**
+ * @api {get} /api/order-items/order/:orderId Lấy các mục trong đơn hàng theo OrderID
+ * @apiName GetOrderItemsByOrderId
+ */
 exports.getOrderItemsByOrderId = async (req, res) => {
   try {
-    const orderItems = await OrderItem.find({ OrderID: req.params.orderId })
-      .populate({
-        path: 'ProductID',
-        model: 'Product',
-        select: 'ProductName Price Image Description'
-      });
+    const orderItems = await OrderItem.find({
+      OrderID: req.params.orderId,
+    }).populate({
+      path: "ProductID",
+      model: "Product",
+      select: "ProductName Price Image Description",
+    });
 
     res.json(orderItems);
   } catch (err) {
@@ -30,16 +37,19 @@ exports.getOrderItemsByOrderId = async (req, res) => {
   }
 };
 
-// Lấy mục trong đơn hàng theo OrderID và ProductID
+/**
+ * @api {get} /api/order-items/:orderId/:productId Lấy mục trong đơn hàng theo OrderID và ProductID
+ * @apiName GetOrderItemByIds
+ */
 exports.getOrderItemByIds = async (req, res) => {
   try {
     const orderItem = await OrderItem.findOne({
       OrderID: req.params.orderId,
       ProductID: req.params.productId,
     }).populate({
-      path: 'ProductID',
-      model: 'Product',
-      select: 'ProductName Price Image Description'
+      path: "ProductID",
+      model: "Product",
+      select: "ProductName Price Image Description",
     });
 
     if (!orderItem) {
@@ -53,7 +63,10 @@ exports.getOrderItemByIds = async (req, res) => {
   }
 };
 
-// Thêm mục vào đơn hàng
+/**
+ * @api {post} /api/order-items Thêm mục vào đơn hàng
+ * @apiName CreateOrderItem
+ */
 exports.createOrderItem = async (req, res) => {
   const { OrderID, ProductID, Quantity, Price } = req.body;
 
@@ -99,7 +112,10 @@ exports.createOrderItem = async (req, res) => {
   }
 };
 
-// Cập nhật mục trong đơn hàng
+/**
+ * @api {put} /api/order-items/:orderId/:productId Cập nhật mục trong đơn hàng
+ * @apiName UpdateOrderItem
+ */
 exports.updateOrderItem = async (req, res) => {
   const { Quantity, Price } = req.body;
 
@@ -132,7 +148,10 @@ exports.updateOrderItem = async (req, res) => {
   }
 };
 
-// Xóa mục khỏi đơn hàng
+/**
+ * @api {delete} /api/order-items/:orderId/:productId Xóa mục khỏi đơn hàng
+ * @apiName DeleteOrderItem
+ */
 exports.deleteOrderItem = async (req, res) => {
   try {
     const orderItem = await OrderItem.findOneAndDelete({

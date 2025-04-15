@@ -2,7 +2,10 @@ const Cart = require("../models/Cart");
 const CartItem = require("../models/CartItem");
 const Product = require("../models/Product");
 
-// Lấy tất cả giỏ hàng
+/**
+ * @api {get} /api/carts Lấy tất cả giỏ hàng
+ * @apiName GetAllCarts
+ */
 exports.getAllCarts = async (req, res) => {
   try {
     const carts = await Cart.find();
@@ -13,7 +16,10 @@ exports.getAllCarts = async (req, res) => {
   }
 };
 
-// Lấy giỏ hàng theo ID
+/**
+ * @api {get} /api/carts/:id Lấy giỏ hàng theo ID
+ * @apiName GetCartById
+ */
 exports.getCartById = async (req, res) => {
   try {
     const cart = await Cart.findOne({ CartID: req.params.id });
@@ -29,7 +35,10 @@ exports.getCartById = async (req, res) => {
   }
 };
 
-// Lấy giỏ hàng theo Email
+/**
+ * @api {get} /api/carts/email/:email Lấy giỏ hàng theo Email
+ * @apiName GetCartByEmail
+ */
 exports.getCartByEmail = async (req, res) => {
   try {
     const cart = await Cart.findOne({ Email: req.params.email });
@@ -45,7 +54,10 @@ exports.getCartByEmail = async (req, res) => {
   }
 };
 
-// Tạo giỏ hàng mới
+/**
+ * @api {post} /api/carts Tạo giỏ hàng mới
+ * @apiName CreateCart
+ */
 exports.createCart = async (req, res) => {
   const { CartID, Email } = req.body;
 
@@ -78,7 +90,10 @@ exports.createCart = async (req, res) => {
   }
 };
 
-// Xóa giỏ hàng
+/**
+ * @api {delete} /api/carts/:id Xóa giỏ hàng
+ * @apiName DeleteCart
+ */
 exports.deleteCart = async (req, res) => {
   try {
     const cart = await Cart.findOneAndDelete({ CartID: req.params.id });

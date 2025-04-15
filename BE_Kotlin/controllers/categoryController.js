@@ -1,6 +1,9 @@
 const Category = require("../models/Category");
 
-// Lấy tất cả categories
+/**
+ * @api {get} /api/categories Lấy tất cả categories
+ * @apiName GetAllCategories
+ */
 exports.getAllCategories = async (req, res) => {
   try {
     const categories = await Category.find();
@@ -11,7 +14,10 @@ exports.getAllCategories = async (req, res) => {
   }
 };
 
-// Lấy category theo ID
+/**
+ * @api {get} /api/categories/:id Lấy category theo ID
+ * @apiName GetCategoryById
+ */
 exports.getCategoryById = async (req, res) => {
   try {
     const category = await Category.findOne({ CateID: req.params.id });
@@ -27,7 +33,10 @@ exports.getCategoryById = async (req, res) => {
   }
 };
 
-// Tạo category mới
+/**
+ * @api {post} /api/categories Tạo category mới
+ * @apiName CreateCategory
+ */
 exports.createCategory = async (req, res) => {
   const { CateID, CateName } = req.body;
 
@@ -53,7 +62,10 @@ exports.createCategory = async (req, res) => {
   }
 };
 
-// Cập nhật category
+/**
+ * @api {put} /api/categories/:id Cập nhật category
+ * @apiName UpdateCategory
+ */
 exports.updateCategory = async (req, res) => {
   const { CateName } = req.body;
 
@@ -75,7 +87,10 @@ exports.updateCategory = async (req, res) => {
   }
 };
 
-// Xóa category
+/**
+ * @api {delete} /api/categories/:id Xóa category
+ * @apiName DeleteCategory
+ */
 exports.deleteCategory = async (req, res) => {
   try {
     const category = await Category.findOneAndDelete({ CateID: req.params.id });
